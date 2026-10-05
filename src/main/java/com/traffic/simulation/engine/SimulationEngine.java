@@ -4,12 +4,12 @@ import com.traffic.simulation.scheduler.EventScheduler;
 import com.traffic.simulation.events.SimulationEvent;
 
 public class SimulationEngine {
-    private final SimulationClock clock;
+    private final SimulationContext context;
     private final EventScheduler scheduler;
     private boolean isRunning;
 
     public SimulationEngine() {
-        this.clock = new SimulationClock();
+        this.context= new SimulationContext(new SimulationClock());
         this.scheduler = new EventScheduler();
         this.isRunning = false;
     }
@@ -19,7 +19,7 @@ public class SimulationEngine {
 
         while(isRunning && scheduler.hasEvents()){
             SimulationEvent Event = scheduler.getNextEvent();
-            clock.advanceTime(Event.getEventTime());
+            context.getClock().advanceTime(Event.getEventTime());
             Event.executeEvent();
         }
 
@@ -31,13 +31,13 @@ public class SimulationEngine {
     }
 
     public void reset(){
-        clock.reset();
+        context.getClock().reset();
         scheduler.clearEvents();
         isRunning = false;
     }
 
     public SimulationClock getClock() {
-        return clock;
+        return context.getClock();
     }
 
     public EventScheduler getScheduler() {
