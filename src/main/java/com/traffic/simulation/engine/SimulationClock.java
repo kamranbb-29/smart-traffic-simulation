@@ -10,7 +10,7 @@ public class SimulationClock {
         return currentTime;
     }
 
-    public void advvanceTime(double time) throws IllegalArgumentException {
+    public void advanceTime(double time) throws IllegalArgumentException {
         if(time < currentTime){
             throw new IllegalArgumentException("Time cannot go backwards.");
         }
