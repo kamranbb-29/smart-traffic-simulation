@@ -30,9 +30,9 @@ Add traffic events, strategy comparison, statistics, and visualization.
 ## Team
 
 - Kamran — Traffic Control
-- Avanish — Simulation Engine & Events
+- Avanish-Statistics, Evaluation & Interface
 - Utkarsh — Traffic Model
-- Yuvraj — Statistics, Evaluation & Interface
+- Yuvraj — Simulation Engine & Events
 
 ## Technology
 
