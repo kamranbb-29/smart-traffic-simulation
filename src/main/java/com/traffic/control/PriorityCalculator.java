@@ -6,7 +6,7 @@ public class PriorityCalculator {
         int waitingTime = (int) trafficData.getWaitingTime();
         int vehicleCount = (int) trafficData.getVehicleCount();
 
-        return waitingTime + vehicleCount;
+        return waitingTime + vehicleCount + 0.5 * waitingTime;
 
     }
 

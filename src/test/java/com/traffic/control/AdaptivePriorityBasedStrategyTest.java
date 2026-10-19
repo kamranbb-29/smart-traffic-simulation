@@ -76,4 +76,32 @@ public class AdaptivePriorityBasedStrategyTest {
 
     }
 
+    @Test
+    void AdaptiveTest6() {
+        Map<Direction, DirectionTraffic> trafficData = new HashMap<>();
+        trafficData.put(Direction.NORTH, new DirectionTraffic(3, 0, 150));
+
+        trafficData.put(Direction.SOUTH, new DirectionTraffic(8, 0, 200));
+
+        TrafficSnapshot snapshot = new TrafficSnapshot(trafficData);
+        AdaptivePriorityStrategy aps = new AdaptivePriorityStrategy();
+
+        assertEquals(Direction.SOUTH, aps.chooseDirection(snapshot));
+
+    }
+
+    @Test
+    void AdaptiveTest7() {
+        Map<Direction, DirectionTraffic> trafficData = new HashMap<>();
+        trafficData.put(Direction.NORTH, new DirectionTraffic(3, 0, 200));
+
+        trafficData.put(Direction.SOUTH, new DirectionTraffic(8, 1, 2));
+
+        TrafficSnapshot snapshot = new TrafficSnapshot(trafficData);
+        AdaptivePriorityStrategy aps = new AdaptivePriorityStrategy();
+
+        assertEquals(Direction.SOUTH, aps.chooseDirection(snapshot));
+
+    }
+
 }

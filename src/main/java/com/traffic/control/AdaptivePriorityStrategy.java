@@ -42,6 +42,30 @@ public class AdaptivePriorityStrategy implements SignalControlStrategy {
         if (direc != null) {
             return direc;
         }
+        Direction tempDirec = null;
+        int tempWaitingTime = -1;
+        for (Map.Entry<Direction, DirectionTraffic> entry : snapshot.getTrafficData().entrySet()) {
+
+            Direction direction = entry.getKey();
+            DirectionTraffic traffic = entry.getValue();
+
+            if (traffic.getWaitingTime() >= 120) {
+                if (traffic.getWaitingTime() > tempWaitingTime) {
+                    tempDirec = direction;
+                    tempWaitingTime = (int) traffic.getWaitingTime();
+                } else if (traffic.getWaitingTime() == tempWaitingTime) {
+                    if (direction.ordinal() < tempDirec.ordinal()) {
+                        tempDirec = direction;
+
+                    }
+                }
+            }
+
+        }
+
+        if (tempDirec != null) {
+            return tempDirec;
+        }
 
         PriorityCalculator PC = new PriorityCalculator();
 
