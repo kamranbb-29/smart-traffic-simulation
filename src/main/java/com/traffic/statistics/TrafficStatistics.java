@@ -6,7 +6,9 @@ public class TrafficStatistics {
     private int completedVehicles;
     private double maximumWaitingTime;
     private double simulationDuration;
-    
+    private int totalQueueLength;
+    private int queueObservations;
+
 public void recordCompletedVehicle(double waitingTime) {
     if (waitingTime < 0) {
         throw new IllegalArgumentException(
@@ -51,5 +53,22 @@ public double getThroughput() {
     }
 
     return completedVehicles / simulationDuration;
+}
+public void recordQueueLength(int queueLength) {
+    if (queueLength < 0) {
+        throw new IllegalArgumentException(
+            "Queue length cannot be negative"
+        );
+    }
+
+    totalQueueLength += queueLength;
+    queueObservations++;
+}
+public double getAverageQueueLength() {
+    if (queueObservations == 0) {
+        return 0.0;
+    }
+
+    return (double) totalQueueLength / queueObservations;
 }
 }
