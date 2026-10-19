@@ -14,6 +14,6 @@ public class RoadBlockEvent extends SimulationEvent{
 
     @Override
     public void executeEvent() {
-        System.out.println("Road " + roadId + "is blocked at simulated time " + getEventTime());
+        System.out.println("Road " + roadId + " is blocked at simulated time " + getEventTime());
     }
 }
