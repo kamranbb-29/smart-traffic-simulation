@@ -31,9 +31,14 @@ public class SimulationEngine {
     }
 
     public void reset(){
+        isRunning = false;
         context.getClock().reset();
         scheduler.clearEvents();
-        isRunning = false;
+        
+    }
+
+    public SimulationContext getContext() {
+        return context;
     }
 
     public SimulationClock getClock() {

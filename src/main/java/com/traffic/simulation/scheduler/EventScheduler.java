@@ -4,26 +4,26 @@ import com.traffic.simulation.events.SimulationEvent;
 import java.util.PriorityQueue;
 
 public class EventScheduler {
-    private final PriorityQueue<SimulationEvent> eventQueue;
+    private final PriorityQueue<ScheduledEvent> eventQueue;
+    private long nextSequenceNumber = 0;
 
     public EventScheduler(){
-        this.eventQueue = new PriorityQueue<>(
-            (event1, event2) -> {
-                int timeComparison = Double.compare(event1.getEventTime(), event2.getEventTime());
-                if(timeComparison != 0) {
-                    return timeComparison;
-                }
-                return Integer.compare(event1.getEventPriority(), event2.getEventPriority());
-            }
-        );
+        this.eventQueue = new PriorityQueue<>();
     }
 
     public void scheduleEvent(SimulationEvent event){
-        eventQueue.add(event);
+        ScheduledEvent scheduled = new ScheduledEvent(event, nextSequenceNumber++);
+        eventQueue.add(scheduled);
     }
 
     public SimulationEvent getNextEvent(){
-        return eventQueue.poll();
+        ScheduledEvent scheduled = eventQueue.poll();
+        
+        if(scheduled == null){
+            return null;
+        }
+
+        return scheduled.getEvent();
     }
 
     public boolean hasEvents(){
