@@ -1,5 +1,6 @@
 package com.traffic.simulation.events;
 
+import com.traffic.simulation.engine.SimulationContext;
 public abstract class SimulationEvent {
     private double eventTime;
     private String eventType;
@@ -23,5 +24,5 @@ public abstract class SimulationEvent {
         return eventType;
     }
 
-    abstract public void executeEvent();
+    abstract public void executeEvent(SimulationContext context);
 }

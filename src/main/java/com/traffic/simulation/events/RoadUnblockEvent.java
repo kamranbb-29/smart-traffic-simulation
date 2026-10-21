@@ -1,5 +1,6 @@
 package com.traffic.simulation.events;
 
+import com.traffic.simulation.engine.SimulationContext;
 public class RoadUnblockEvent extends SimulationEvent{
     private final String roadId;
     
@@ -13,7 +14,7 @@ public class RoadUnblockEvent extends SimulationEvent{
     }
 
     @Override
-    public void executeEvent() {
+    public void executeEvent(SimulationContext context) {
         System.out.println("Road " + roadId + " is unblocked at simulated time " + getEventTime());
     }
 }

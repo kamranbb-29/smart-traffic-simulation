@@ -20,7 +20,7 @@ public class SimulationEngine {
         while(isRunning && scheduler.hasEvents()){
             SimulationEvent Event = scheduler.getNextEvent();
             context.getClock().advanceTime(Event.getEventTime());
-            Event.executeEvent();
+            Event.executeEvent(context);
         }
 
         isRunning = false;

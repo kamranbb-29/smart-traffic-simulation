@@ -1,5 +1,6 @@
 package com.traffic.simulation.events;
 
+import com.traffic.simulation.engine.SimulationContext;
 public class SignalRecoveryEvent extends SimulationEvent{
     private final String signalId;
 
@@ -13,7 +14,7 @@ public class SignalRecoveryEvent extends SimulationEvent{
     }
 
     @Override
-    public void executeEvent() {
+    public void executeEvent(SimulationContext context) {
         System.out.println("The Signal " + signalId + " is now operational at simulation time " + getEventTime());
     }
 }

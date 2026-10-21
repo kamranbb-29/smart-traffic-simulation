@@ -1,5 +1,6 @@
 package com.traffic.simulation.events;
 
+import com.traffic.simulation.engine.SimulationContext;
 public class RoadBlockEvent extends SimulationEvent{
     private final String roadId;
 
@@ -13,7 +14,7 @@ public class RoadBlockEvent extends SimulationEvent{
     }
 
     @Override
-    public void executeEvent() {
+    public void executeEvent(SimulationContext context) {
         System.out.println("Road " + roadId + " is blocked at simulated time " + getEventTime());
     }
 }

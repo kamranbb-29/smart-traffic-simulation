@@ -1,5 +1,6 @@
 package com.traffic.simulation.events;
 
+import com.traffic.simulation.engine.SimulationContext;
 public class TrafficLightChangeEvent extends SimulationEvent{
     private final String signalId;
     private final String newState;
@@ -20,7 +21,7 @@ public class TrafficLightChangeEvent extends SimulationEvent{
     }
 
     @Override
-    public void executeEvent() {
+    public void executeEvent(SimulationContext context) {
         System.out.println("Signal " + signalId + " changed to " + newState + " at simulation time " + getEventTime());
     }
 }
