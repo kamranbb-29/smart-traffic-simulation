@@ -1,6 +1,6 @@
 package com.traffic.control;
 
-enum Direction {
+public enum Direction {
     NORTH,
     EAST,
     SOUTH,
