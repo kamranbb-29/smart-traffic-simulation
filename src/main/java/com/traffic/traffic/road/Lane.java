@@ -1,9 +1,11 @@
 
 package com.traffic.traffic.road;
-
+import java.util.List;
 import com.traffic.traffic.vehicle.Vehicle;
 import java.util.ArrayDeque;
 import java.util.Queue;
+
+
 
 
 
@@ -52,5 +54,7 @@ public class Lane {
     public boolean isEmpty() {
     return vehicles.isEmpty();
     }
-    
+    public List<Vehicle> getVehicles() {
+        return List.copyOf(vehicles);
+    }
 }
