@@ -46,6 +46,8 @@ public class Road {
             }
         }
 
+        // Apply the current road-wide blockage to newly added lanes
+        lane.setRoadblock(blocked);
         lanes.add(lane);
     }
 
@@ -79,17 +81,25 @@ public class Road {
         return getVehicleCount() == 0;
     }
 
-    // Block the road
+    // Block the entire road and all its lanes
     public void blockRoad() {
         this.blocked = true;
+
+        for (Lane lane : lanes) {
+            lane.setRoadblock(true);
+        }
     }
 
-    // Unblock the road
+    // Clear the road-wide blockage without clearing individual lane accidents
     public void unblockRoad() {
         this.blocked = false;
+
+        for (Lane lane : lanes) {
+            lane.setRoadblock(false);
+        }
     }
 
-    // Getter for blocked status
+    // Getter for road-wide blockage status
     public boolean isBlocked() {
         return blocked;
     }
