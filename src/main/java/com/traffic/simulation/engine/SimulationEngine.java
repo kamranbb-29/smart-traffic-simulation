@@ -1,6 +1,7 @@
 package com.traffic.simulation.engine;
 
 import com.traffic.simulation.scheduler.EventScheduler;
+import com.traffic.traffic.intersection.Intersection;
 import com.traffic.simulation.events.SimulationEvent;
 
 public class SimulationEngine {
@@ -9,7 +10,15 @@ public class SimulationEngine {
     private boolean isRunning;
 
     public SimulationEngine() {
-        this.context= new SimulationContext(new SimulationClock());
+        this(new Intersection("INT1"));
+    }
+
+    public SimulationEngine(Intersection intersection) {
+        if (intersection == null) {
+            throw new IllegalArgumentException("Intersection cannot be null");
+        }
+
+        this.context = new SimulationContext(new SimulationClock(), intersection);
         this.scheduler = new EventScheduler();
         this.isRunning = false;
     }
@@ -18,9 +27,9 @@ public class SimulationEngine {
         isRunning = true;
 
         while(isRunning && scheduler.hasEvents()){
-            SimulationEvent Event = scheduler.getNextEvent();
-            context.getClock().advanceTime(Event.getEventTime());
-            Event.executeEvent(context);
+            SimulationEvent event = scheduler.getNextEvent();
+            context.getClock().advanceTime(event.getEventTime());
+            event.executeEvent(context);
         }
 
         isRunning = false;
