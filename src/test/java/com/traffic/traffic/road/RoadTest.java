@@ -85,4 +85,29 @@ void shouldRejectInvalidRoadIds() {
         () -> new Road(" ")
     );
 }
+@Test
+void shouldBeUnblockedByDefault() {
+    Road road = new Road("R1");
+
+    assertFalse(road.isBlocked());
+}
+
+@Test
+void shouldBlockRoad() {
+    Road road = new Road("R2");
+
+    road.blockRoad();
+
+    assertTrue(road.isBlocked());
+}
+
+@Test
+void shouldUnblockRoad() {
+    Road road = new Road("R3");
+
+    road.blockRoad();
+    road.unblockRoad();
+
+    assertFalse(road.isBlocked());
+}
 }
