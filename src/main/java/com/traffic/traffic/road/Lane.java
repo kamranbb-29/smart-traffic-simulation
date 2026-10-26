@@ -13,6 +13,7 @@ public class Lane {
 
     private final String id;
     private final Queue<Vehicle> vehicles;
+    private boolean blocked = false;
 
     public Lane(String id) {
     if (id == null || id.isBlank()) {
@@ -56,5 +57,14 @@ public class Lane {
     }
     public List<Vehicle> getVehicles() {
         return List.copyOf(vehicles);
+    }
+    public void blockLane() {
+        this.blocked = true;
+    }
+    public boolean isBlocked() {
+        return blocked;
+    }
+    public void unblockLane() {
+        this.blocked = false;
     }
 }

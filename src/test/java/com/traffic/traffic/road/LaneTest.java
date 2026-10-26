@@ -49,10 +49,44 @@ class LaneTest {
 
     @Test
     void shouldRejectInvalidLaneId() {
-        assertThrows(IllegalArgumentException.class,
-            () -> new Lane(null));
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new Lane(null)
+        );
 
-        assertThrows(IllegalArgumentException.class,
-            () -> new Lane(" "));
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new Lane(" ")
+        );
+    }
+
+    // New tests for lane blocking
+
+    @Test
+    void shouldBeUnblockedByDefault() {
+        Lane lane = new Lane("L4");
+
+        assertFalse(lane.isBlocked());
+    }
+
+    @Test
+    void shouldBlockLaneAfterAccident() {
+        Lane lane = new Lane("L5");
+
+        lane.blockLane();
+
+        assertTrue(lane.isBlocked());
+    }
+
+    @Test
+    void shouldUnblockLaneAfterAccidentIsCleared() {
+        Lane lane = new Lane("L6");
+
+        lane.blockLane();
+        assertTrue(lane.isBlocked());
+
+        lane.unblockLane();
+
+        assertFalse(lane.isBlocked());
     }
 }
