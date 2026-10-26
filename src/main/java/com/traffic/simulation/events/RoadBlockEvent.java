@@ -1,6 +1,7 @@
 package com.traffic.simulation.events;
 
 import com.traffic.simulation.engine.SimulationContext;
+import com.traffic.traffic.road.*;
 public class RoadBlockEvent extends SimulationEvent{
     private final String roadId;
 
@@ -15,6 +16,16 @@ public class RoadBlockEvent extends SimulationEvent{
 
     @Override
     public void executeEvent(SimulationContext context) {
-        System.out.println("Road " + roadId + " is blocked at simulated time " + getEventTime());
+        if(context == null){
+            throw new IllegalArgumentException("SimulationContext cannot be Null");
+        }
+
+        Road road = context.getRoad(roadId);
+        road.blockRoad();
+        for(Lane lane : road.getLanes()){
+            lane.blockLane();
+        }
+
+        System.out.println("Road " + roadId + " is block at simulated time " + getEventTime());
     }
 }
