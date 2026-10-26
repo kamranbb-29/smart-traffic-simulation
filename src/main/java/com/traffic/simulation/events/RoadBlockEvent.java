@@ -7,6 +7,9 @@ public class RoadBlockEvent extends SimulationEvent{
 
     public RoadBlockEvent(String roadId, double eventTime, int eventPriority){
         super(eventTime, "Road_Block", eventPriority);
+        if(roadId == null || roadId.trim().isEmpty()){
+            throw new IllegalArgumentException("Road ID cannot be null or empty");
+        }
         this.roadId = roadId;
     }
 
@@ -23,7 +26,7 @@ public class RoadBlockEvent extends SimulationEvent{
         Road road = context.getRoad(roadId);
         road.blockRoad();
         for(Lane lane : road.getLanes()){
-            lane.blockLane();
+            lane.setRoadblock(true);
         }
 
         System.out.println("Road " + roadId + " is block at simulated time " + getEventTime());
