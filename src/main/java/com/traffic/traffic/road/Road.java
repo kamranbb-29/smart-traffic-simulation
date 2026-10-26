@@ -11,6 +11,7 @@ public class Road {
     private final String id;
     private final Direction direction;
     private final List<Lane> lanes;
+    private boolean blocked = false;
 
     // Existing constructor — keeps old code compatible
     public Road(String id) {
@@ -76,5 +77,20 @@ public class Road {
 
     public boolean isEmpty() {
         return getVehicleCount() == 0;
+    }
+
+    // Block the road
+    public void blockRoad() {
+        this.blocked = true;
+    }
+
+    // Unblock the road
+    public void unblockRoad() {
+        this.blocked = false;
+    }
+
+    // Getter for blocked status
+    public boolean isBlocked() {
+        return blocked;
     }
 }
