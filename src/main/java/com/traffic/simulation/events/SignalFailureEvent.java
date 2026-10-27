@@ -1,20 +1,37 @@
 package com.traffic.simulation.events;
 
 import com.traffic.simulation.engine.SimulationContext;
-public class SignalFailureEvent extends SimulationEvent{
-    private final String signalId;
+import com.traffic.control.Direction;
 
-    public SignalFailureEvent(String signalId, double eventTime, int eventPriority){
+public class SignalFailureEvent extends SimulationEvent {
+
+    private final Direction direction;
+
+    public SignalFailureEvent(Direction direction, double eventTime, int eventPriority) {
         super(eventTime, "Signal_Failure", eventPriority);
-        this.signalId = signalId;
+
+        if (direction == null) {
+            throw new IllegalArgumentException("Direction cannot be null");
+        }
+
+        this.direction = direction;
     }
 
-    public String getSignalId(){
-        return this.signalId;
+    public Direction getDirection() {
+        return direction;
     }
 
     @Override
     public void executeEvent(SimulationContext context) {
-        System.out.println("The Signal " + signalId + " is not operational at simulation time " + getEventTime());
+        if (context == null) {
+            throw new IllegalArgumentException("SimulationContext cannot be null");
+        }
+
+        context.failSignal(direction);
+
+        System.out.println(
+            "Traffic signal " + direction +
+            " failed at simulation time " + getEventTime()
+        );
     }
 }

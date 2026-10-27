@@ -1,27 +1,71 @@
 package com.traffic.simulation.events;
 
 import com.traffic.simulation.engine.SimulationContext;
-public class TrafficLightChangeEvent extends SimulationEvent{
-    private final String signalId;
-    private final String newState;
+import com.traffic.control.Direction;
+import com.traffic.control.InvalidSignalTransitionException;
+import com.traffic.control.SignalState;
+import com.traffic.control.TrafficSignal;
 
-    public TrafficLightChangeEvent(String signalId, String newState, double eventTime, int eventPriority){
+public class TrafficLightChangeEvent extends SimulationEvent {
+
+    private final Direction direction;
+    private final SignalState nextState;
+
+    public TrafficLightChangeEvent(
+            Direction direction,
+            SignalState nextState,
+            double eventTime,
+            int eventPriority) {
+
         super(eventTime, "Traffic_Light_Change", eventPriority);
-        this.signalId = signalId;
-        this.newState = newState;
+
+        if (direction == null || nextState == null) {
+            throw new IllegalArgumentException(
+                "Direction and SignalState cannot be null"
+            );
+        }
+
+        this.direction = direction;
+        this.nextState = nextState;
     }
 
-    public String getSignalId(){
-        return this.signalId;
+    public Direction getDirection() {
+        return direction;
     }
 
-
-    public String getNewState(){
-        return this.newState;
+    public SignalState getNextState() {
+        return nextState;
     }
 
     @Override
     public void executeEvent(SimulationContext context) {
-        System.out.println("Signal " + signalId + " changed to " + newState + " at simulation time " + getEventTime());
+
+        if (context == null) {
+            throw new IllegalArgumentException(
+                "SimulationContext cannot be null"
+            );
+        }
+
+        if (context.isSignalFailed(direction)) {
+            System.out.println(
+                "Signal " + direction + " is failed. State change skipped."
+            );
+            return;
+        }
+
+        TrafficSignal signal = context.getTrafficSignal(direction);
+
+    try {
+        signal.transitionTo(nextState);
+    } catch (InvalidSignalTransitionException e) {
+        throw new IllegalStateException(
+            "Failed to change signal " + direction + " to " + nextState,
+            e
+        );
+    }
+        System.out.println(
+            "Signal " + direction + " changed to " + nextState +
+            " at simulation time " + getEventTime()
+        );
     }
 }

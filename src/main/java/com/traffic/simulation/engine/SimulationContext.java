@@ -3,9 +3,17 @@ package com.traffic.simulation.engine;
 import com.traffic.traffic.road.Lane;
 import com.traffic.traffic.intersection.Intersection;
 import com.traffic.traffic.road.Road;
+import com.traffic.control.*;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 public class SimulationContext {
     private final SimulationClock clock;
     private final Intersection intersection;
+    private final Map<Direction, TrafficSignal> trafficSignals;
+    private final Set<Direction> failedSignals;
 
     public SimulationContext(SimulationClock clock, Intersection intersection) {
         if(clock == null){
@@ -16,6 +24,8 @@ public class SimulationContext {
         }
         this.clock = clock;
         this.intersection = intersection;
+        this.trafficSignals = new HashMap<>();
+        this.failedSignals = new HashSet<>();
     }
 
     public SimulationClock getClock() {
@@ -56,5 +66,56 @@ public class SimulationContext {
         }
         
         throw new IllegalArgumentException("Road with ID " + roadId + " does not exist");
+    }
+
+    public void addTrafficSignal(TrafficSignal signal) {
+        if (signal == null) {
+            throw new IllegalArgumentException("TrafficSignal cannot be null");
+        }
+
+        Direction direction = signal.getDirection();
+
+        if (direction == null) {
+            throw new IllegalArgumentException("Signal direction cannot be null");
+        }
+
+        if (trafficSignals.containsKey(direction)) {
+            throw new IllegalArgumentException(
+                "Traffic signal already exists for " + direction
+            );
+        }
+
+        trafficSignals.put(direction, signal);
+    }
+
+    public TrafficSignal getTrafficSignal(Direction direction) {
+        if (direction == null) {
+            throw new IllegalArgumentException("Direction cannot be null");
+        }
+
+        TrafficSignal signal = trafficSignals.get(direction);
+
+        if (signal == null) {
+            throw new IllegalArgumentException(
+                "No traffic signal found for " + direction
+            );
+        }
+
+        return signal;
+    }
+
+    public void failSignal(Direction direction) {
+        getTrafficSignal(direction);
+        failedSignals.add(direction);
+    }
+
+    public void recoverSignal(Direction direction) {
+        getTrafficSignal(direction);
+        failedSignals.remove(direction);
+    }
+
+    public boolean isSignalFailed(Direction direction) {
+        getTrafficSignal(direction);
+        return failedSignals.contains(direction);
     }
 }
