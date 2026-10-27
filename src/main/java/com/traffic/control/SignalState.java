@@ -1,6 +1,6 @@
 package com.traffic.control;
 
-enum SignalState {
+public enum SignalState {
     RED,
     GREEN,
     YELLOW
