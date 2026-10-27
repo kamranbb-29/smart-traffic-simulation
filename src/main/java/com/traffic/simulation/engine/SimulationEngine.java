@@ -7,7 +7,7 @@ import com.traffic.simulation.events.SimulationEvent;
 public class SimulationEngine {
     private final SimulationContext context;
     private final EventScheduler scheduler;
-    private boolean isRunning;
+    private volatile boolean isRunning;
 
     public SimulationEngine() {
         this(new Intersection("INT1"));
@@ -26,13 +26,15 @@ public class SimulationEngine {
     public void run(){
         isRunning = true;
 
-        while(isRunning && scheduler.hasEvents()){
-            SimulationEvent event = scheduler.getNextEvent();
-            context.getClock().advanceTime(event.getEventTime());
-            event.executeEvent(context);
+        try{
+            while(isRunning && scheduler.hasEvents()){
+                SimulationEvent event = scheduler.getNextEvent();
+                context.getClock().advanceTime(event.getEventTime());
+                event.executeEvent(context);
+            }
+        }finally{
+            isRunning = false;
         }
-
-        isRunning = false;
     }
 
     public void stop(){
