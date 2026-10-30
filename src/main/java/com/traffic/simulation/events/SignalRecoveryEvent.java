@@ -2,6 +2,7 @@ package com.traffic.simulation.events;
 
 import com.traffic.simulation.engine.SimulationContext;
 import com.traffic.control.Direction;
+import com.traffic.control.SignalState;
 
 public class SignalRecoveryEvent extends SimulationEvent {
 
@@ -28,6 +29,15 @@ public class SignalRecoveryEvent extends SimulationEvent {
         }
 
         context.recoverSignal(direction);
+        if (context.getTrafficSignal(direction).getCurrentState()
+                == SignalState.GREEN) {
+
+            context.scheduleMovementsForDirection(
+                direction,
+                getEventTime(),
+                getEventPriority()
+            );
+        }
 
         System.out.println(
             "Traffic signal " + direction +

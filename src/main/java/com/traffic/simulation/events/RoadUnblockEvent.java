@@ -25,6 +25,11 @@ public class RoadUnblockEvent extends SimulationEvent{
 
         Road road = context.getRoad(roadId);
         road.unblockRoad();
+        context.scheduleMovementsForRoad(
+            roadId,
+            getEventTime(),
+            getEventPriority()
+        );
         for(Lane lane : road.getLanes()){
             lane.setRoadblock(false);
         }

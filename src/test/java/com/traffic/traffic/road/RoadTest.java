@@ -8,6 +8,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 
 import com.traffic.traffic.vehicle.Car;
+import com.traffic.traffic.vehicle.Vehicle;
+import com.traffic.control.Direction;
+import com.traffic.simulation.events.MovementType;
 import com.traffic.traffic.vehicle.Bike;
 
 class RoadTest {
@@ -149,5 +152,87 @@ class RoadTest {
         lane1.unblockLane();
 
         assertFalse(lane1.isBlocked());
+    }
+
+        private Vehicle createVehicle(String id, MovementType movement) {
+        return new Vehicle(id, 0, movement) {
+            @Override
+            public String getType() {
+                return "Test";
+            }
+        };
+    }
+
+    @Test
+    void shouldSelectLaneThatPermitsIntendedMovement() {
+        Road road = new Road("R1", Direction.NORTH);
+
+        Lane leftLane = new Lane("L1", MovementType.LEFT);
+        Lane rightLane = new Lane("L2", MovementType.RIGHT);
+
+        road.addLane(leftLane);
+        road.addLane(rightLane);
+
+        assertSame(
+            leftLane,
+            road.findLeastLoadedCompatibleLane(MovementType.LEFT)
+                .orElseThrow()
+        );
+    }
+
+    @Test
+    void shouldSelectLeastLoadedCompatibleLane() {
+        Road road = new Road("R1", Direction.NORTH);
+
+        Lane leftLane = new Lane("L1", MovementType.LEFT);
+        Lane rightLane = new Lane("L2", MovementType.RIGHT);
+
+        road.addLane(leftLane);
+        road.addLane(rightLane);
+
+        leftLane.addVehicle(
+            createVehicle("V1", MovementType.STRAIGHT)
+        );
+        leftLane.addVehicle(
+            createVehicle("V2", MovementType.STRAIGHT)
+        );
+
+        assertSame(
+            rightLane,
+            road.findLeastLoadedCompatibleLane(MovementType.STRAIGHT)
+                .orElseThrow()
+        );
+    }
+
+    @Test
+    void shouldReturnEmptyWhenNoCompatibleLaneExists() {
+        Road road = new Road("R1", Direction.NORTH);
+
+        road.addLane(new Lane("L1", MovementType.LEFT));
+
+        assertTrue(
+            road.findLeastLoadedCompatibleLane(MovementType.RIGHT)
+                .isEmpty()
+        );
+    }
+
+    @Test
+    void shouldRejectNullMovement() {
+        Road road = new Road("R1", Direction.NORTH);
+
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> road.findLeastLoadedCompatibleLane(null)
+        );
+    }
+
+    @Test
+    void shouldReturnEmptyWhenRoadHasNoLanes() {
+        Road road = new Road("R8", Direction.NORTH);
+
+        assertTrue(
+            road.findLeastLoadedCompatibleLane(MovementType.STRAIGHT)
+                .isEmpty()
+        );
     }
 }

@@ -7,8 +7,12 @@ import com.traffic.control.Direction;
 import com.traffic.control.SignalState;
 import com.traffic.control.TrafficSignal;
 import com.traffic.traffic.intersection.Intersection;
+import com.traffic.traffic.road.Lane;
+import com.traffic.traffic.road.Road;
+import com.traffic.traffic.vehicle.Car;
 import com.traffic.simulation.engine.SimulationClock;
 import com.traffic.simulation.engine.SimulationContext;
+import com.traffic.simulation.engine.SimulationEngine;
 import com.traffic.control.InvalidSignalTransitionException;
 
 public class TrafficLightChangeEventTests {
@@ -197,5 +201,30 @@ public class TrafficLightChangeEventTests {
         );
 
         assertEquals(SignalState.YELLOW, event.getNextState());
+    }
+
+    @Test
+    void shouldScheduleMovementWhenSignalTurnsGreen() throws Exception {
+        SimulationEngine engine = new SimulationEngine();
+
+        Road road = new Road("R1", Direction.NORTH);
+        Lane lane = new Lane("L1");
+
+        lane.addVehicle(new Car("C1", 0));
+        road.addLane(lane);
+
+        engine.getContext().getIntersection().addRoad(road);
+
+        engine.getContext().addTrafficSignal(
+            new TrafficSignal(Direction.NORTH)
+        );
+
+        TrafficLightChangeEvent event = new TrafficLightChangeEvent(
+            Direction.NORTH, SignalState.GREEN, 10.0, 1
+        );
+
+        event.executeEvent(engine.getContext());
+
+        assertEquals(1, engine.getScheduler().getEventCount());
     }
 }

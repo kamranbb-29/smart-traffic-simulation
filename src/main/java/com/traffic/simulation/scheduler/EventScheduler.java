@@ -3,7 +3,7 @@ import com.traffic.simulation.events.SimulationEvent;
 
 import java.util.PriorityQueue;
 
-public class EventScheduler {
+public class EventScheduler implements EventScheduling{
     private final PriorityQueue<ScheduledEvent> eventQueue;
     private long nextSequenceNumber = 0;
 

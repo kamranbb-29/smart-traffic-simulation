@@ -18,8 +18,14 @@ public class SimulationEngine {
             throw new IllegalArgumentException("Intersection cannot be null");
         }
 
-        this.context = new SimulationContext(new SimulationClock(), intersection);
         this.scheduler = new EventScheduler();
+
+        this.context = new SimulationContext(
+            new SimulationClock(),
+            intersection,
+            scheduler
+        );
+
         this.isRunning = false;
     }
 

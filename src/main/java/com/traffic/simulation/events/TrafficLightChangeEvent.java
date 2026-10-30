@@ -63,6 +63,14 @@ public class TrafficLightChangeEvent extends SimulationEvent {
             e
         );
     }
+
+    if (nextState == SignalState.GREEN) {
+        context.scheduleMovementsForDirection(
+            direction,
+            getEventTime(),
+            getEventPriority()
+        );
+    }
         System.out.println(
             "Signal " + direction + " changed to " + nextState +
             " at simulation time " + getEventTime()

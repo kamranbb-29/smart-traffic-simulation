@@ -2,9 +2,11 @@
 package com.traffic.traffic.road;
 
 import com.traffic.control.Direction;
+import com.traffic.simulation.events.MovementType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class Road {
 
@@ -102,5 +104,31 @@ public class Road {
     // Getter for road-wide blockage status
     public boolean isBlocked() {
         return blocked;
+    }
+
+    public Optional<Lane> findLeastLoadedCompatibleLane(
+            MovementType movement) {
+
+        if (movement == null) {
+            throw new IllegalArgumentException(
+                "Movement cannot be null"
+            );
+        }
+
+        Lane bestLane = null;
+
+        for (Lane lane : lanes) {
+
+            if (!lane.isMovementPermitted(movement)) {
+                continue;
+            }
+
+            if (bestLane == null ||
+                    lane.getVehicleCount() < bestLane.getVehicleCount()) {
+                bestLane = lane;
+            }
+        }
+
+        return Optional.ofNullable(bestLane);
     }
 }

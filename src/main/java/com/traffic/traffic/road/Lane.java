@@ -5,11 +5,13 @@ import java.util.List;
 import com.traffic.traffic.vehicle.Vehicle;
 import java.util.ArrayDeque;
 import java.util.Queue;
+import com.traffic.simulation.events.MovementType;
 
 public class Lane {
 
     private final String id;
     private final Queue<Vehicle> vehicles;
+    private MovementType permittedMovement;
 
     // Tracks blockage caused by an accident on this specific lane
     private boolean individuallyBlocked = false;
@@ -18,18 +20,44 @@ public class Lane {
     private boolean roadWideBlocked = false;
 
     public Lane(String id) {
+        this(id, MovementType.STRAIGHT);
+    }
+
+    public Lane(String id, MovementType permittedMovement) {
         if (id == null || id.isBlank()) {
             throw new IllegalArgumentException(
                 "Lane ID cannot be empty"
             );
         }
-
+        if(permittedMovement == null){
+            throw new IllegalArgumentException("Permitted Movement Cannot be null");
+        }
+        this.permittedMovement = permittedMovement;
         this.id = id;
         this.vehicles = new ArrayDeque<>();
     }
 
     public String getId() {
         return id;
+    }
+
+    public MovementType getPermittedMovement(){
+        return permittedMovement;
+    }
+
+    public void setPermittedMovement(MovementType permittedMovement){
+        if(permittedMovement == null){
+            throw new IllegalArgumentException("Permitted Movement Cannot be null");
+        }
+        this.permittedMovement = permittedMovement;
+    }
+
+    public boolean isMovementPermitted(MovementType movement) {
+        if (movement == null) {
+            throw new IllegalArgumentException("Movement cannot be null");
+        }
+
+        return movement == MovementType.STRAIGHT || movement == this.permittedMovement;
     }
 
     public void addVehicle(Vehicle vehicle) {
