@@ -137,7 +137,7 @@ public class SimulationSetup {
                 strategy,
                 8,
                 0.0,
-                1));
+                2));
 
         System.out.println("\nStarting simulation...\n");
 
@@ -173,7 +173,7 @@ public class SimulationSetup {
                         vehicle,
                         roadId(direction),
                         arrivalTime,
-                        2));
+                        1));
     }
 
     private static String roadId(Direction direction) {

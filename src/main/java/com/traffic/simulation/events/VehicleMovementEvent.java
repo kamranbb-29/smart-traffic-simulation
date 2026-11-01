@@ -85,6 +85,11 @@ public class VehicleMovementEvent extends SimulationEvent {
     }
 
     @Override
+    public boolean canEnableProgress() {
+        return true;
+    }
+
+    @Override
     public void executeEvent(SimulationContext context) {
 
         if (context == null) {
@@ -162,8 +167,14 @@ public class VehicleMovementEvent extends SimulationEvent {
             );
         }
 
+        // Finalize queue waiting exactly once after movement validation passes,
+        // immediately before successful lane removal.
+        vehicle.finalizeWaitingTime(getEventTime());
+
         // Movement succeeds: remove vehicle from its source lane.
         lane.removeNextVehicle();
+
+        context.recordSuccessfulMovement(vehicle, getEventTime());
 
         Direction exitDirection =
             movementType.getExitDirection(approachDirection);

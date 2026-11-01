@@ -73,18 +73,35 @@ public class Intersection {
         return getVehicleCount() == 0;
     }
 
+    public Map<Direction, DirectionTraffic> getCurrentTrafficState(double currentSimTime) {
+        if (!Double.isFinite(currentSimTime) || currentSimTime < 0) {
+            throw new IllegalArgumentException(
+                "Simulation time must be finite and non-negative: " + currentSimTime
+            );
+        }
+
+        return computeTrafficState(true, currentSimTime);
+    }
+
     public Map<Direction, DirectionTraffic> getCurrentTrafficState() {
+        return computeTrafficState(false, 0.0);
+    }
+
+    private Map<Direction, DirectionTraffic> computeTrafficState(boolean useDynamicTime, double currentSimTime) {
         Map<Direction, Integer> vehicleCounts =
             new EnumMap<>(Direction.class);
         Map<Direction, Integer> emergencyCounts =
             new EnumMap<>(Direction.class);
-        Map<Direction, Long> waitingTimes =
+        Map<Direction, Double> totalWaitingTimes =
+            new EnumMap<>(Direction.class);
+        Map<Direction, Double> maxWaitingTimes =
             new EnumMap<>(Direction.class);
 
         for (Direction direction : Direction.values()) {
             vehicleCounts.put(direction, 0);
             emergencyCounts.put(direction, 0);
-            waitingTimes.put(direction, 0L);
+            totalWaitingTimes.put(direction, 0.0);
+            maxWaitingTimes.put(direction, 0.0);
         }
 
         for (Road road : roads) {
@@ -107,11 +124,12 @@ public class Intersection {
                         );
                     }
 
-                    waitingTimes.merge(
-                        direction,
-                        (long) vehicle.getWaitingTime(),
-                        Long::sum
-                    );
+                    double wait = useDynamicTime
+                        ? vehicle.getWaitingTime(currentSimTime)
+                        : vehicle.getWaitingTime();
+
+                    totalWaitingTimes.merge(direction, wait, Double::sum);
+                    maxWaitingTimes.merge(direction, wait, Math::max);
                 }
             }
         }
@@ -125,7 +143,8 @@ public class Intersection {
                 new DirectionTraffic(
                     vehicleCounts.get(direction),
                     emergencyCounts.get(direction),
-                    waitingTimes.get(direction)
+                    totalWaitingTimes.get(direction),
+                    maxWaitingTimes.get(direction)
                 )
             );
         }

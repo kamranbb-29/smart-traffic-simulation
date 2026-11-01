@@ -16,6 +16,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.OptionalDouble;
 
 public class SimulationContext {
     private final SimulationClock clock;
@@ -29,6 +32,15 @@ public class SimulationContext {
 
     private final Set<Lane> scheduledMovementLanes;
     private final double vehicleHeadway;
+
+    private int successfulMovementCount = 0;
+    private double lastSuccessfulMovementTime = Double.NaN;
+    private boolean phaseBudgetExhausted = false;
+    private SimulationTerminationStatus terminationStatus = null;
+
+    private final Map<String, Double> movementTimestamps;
+    private final Map<String, Double> departureTimestamps;
+    private final Map<Direction, List<GreenInterval>> greenIntervals;
 
     public SimulationContext(SimulationClock clock, Intersection intersection) {
         this(clock, intersection, null, DEFAULT_VEHICLE_HEADWAY);
@@ -66,6 +78,13 @@ public class SimulationContext {
         this.completedVehicles = new ArrayList<>();
         this.scheduledMovementLanes = new HashSet<>();
         this.completedVehicleSet = new HashSet<>();
+
+        this.movementTimestamps = new HashMap<>();
+        this.departureTimestamps = new HashMap<>();
+        this.greenIntervals = new EnumMap<>(Direction.class);
+        for (Direction d : Direction.values()) {
+            this.greenIntervals.put(d, new ArrayList<>());
+        }
     }
 
     public SimulationClock getClock() {
@@ -173,6 +192,13 @@ public class SimulationContext {
     public void failSignal(Direction direction) {
         getTrafficSignal(direction);
         failedSignals.add(direction);
+        List<GreenInterval> intervals = greenIntervals.get(direction);
+        if (intervals != null && !intervals.isEmpty()) {
+            GreenInterval last = intervals.get(intervals.size() - 1);
+            if (last.isOpen()) {
+                last.close(clock.getCurrentTime());
+            }
+        }
     }
 
     public void recoverSignal(Direction direction) {
@@ -186,14 +212,28 @@ public class SimulationContext {
     }
 
     public void recordCompletedVehicle(Vehicle vehicle) {
+        recordCompletedVehicle(vehicle, clock.getCurrentTime());
+    }
+
+    public void recordCompletedVehicle(Vehicle vehicle, double departureTime) {
         if (vehicle == null) {
             throw new IllegalArgumentException(
                     "Vehicle cannot be null");
         }
+        validateEventTime(departureTime);
 
         if (completedVehicleSet.add(vehicle)) {
             completedVehicles.add(vehicle);
+            departureTimestamps.put(vehicle.getId(), departureTime);
         }
+    }
+
+    public Double getDepartureTime(String vehicleId) {
+        return departureTimestamps.get(vehicleId);
+    }
+
+    public Map<String, Double> getDepartureTimestamps() {
+        return Collections.unmodifiableMap(departureTimestamps);
     }
 
     public List<Vehicle> getCompletedVehicles() {
@@ -394,11 +434,222 @@ public class SimulationContext {
     }
 
     public boolean hasPendingArrivalEvents() {
-        if (!(eventScheduling instanceof com.traffic.simulation.scheduler.EventScheduler scheduler)) {
-            throw new IllegalStateException(
-                    "Pending arrival inspection is not supported by this scheduler");
+        if (eventScheduling == null) {
+            throw new IllegalStateException("EventScheduling is not configured in this context");
+        }
+        return eventScheduling.hasPendingArrivalEvents();
+    }
+
+    public OptionalDouble getNextArrivalEventTime() {
+        if (eventScheduling == null) {
+            throw new IllegalStateException("EventScheduling is not configured in this context");
+        }
+        return eventScheduling.getNextArrivalEventTime();
+    }
+
+    public void recordSuccessfulMovement(double movementTime) {
+        recordSuccessfulMovement(null, movementTime);
+    }
+
+    public void recordSuccessfulMovement(Vehicle vehicle, double movementTime) {
+        validateEventTime(movementTime);
+        this.successfulMovementCount++;
+        this.lastSuccessfulMovementTime = movementTime;
+        if (vehicle != null) {
+            movementTimestamps.put(vehicle.getId(), movementTime);
+        }
+    }
+
+    public Double getMovementTime(String vehicleId) {
+        return movementTimestamps.get(vehicleId);
+    }
+
+    public Map<String, Double> getMovementTimestamps() {
+        return Collections.unmodifiableMap(movementTimestamps);
+    }
+
+    public void recordSignalStateChange(Direction direction, SignalState state, double timestamp) {
+        if (direction == null || state == null) {
+            throw new IllegalArgumentException("Direction and SignalState cannot be null");
+        }
+        validateEventTime(timestamp);
+
+        List<GreenInterval> intervals = greenIntervals.computeIfAbsent(direction, k -> new ArrayList<>());
+
+        if (state == SignalState.GREEN) {
+            if (intervals.isEmpty() || !intervals.get(intervals.size() - 1).isOpen()) {
+                intervals.add(new GreenInterval(timestamp));
+            }
+        } else {
+            if (!intervals.isEmpty()) {
+                GreenInterval last = intervals.get(intervals.size() - 1);
+                if (last.isOpen()) {
+                    last.close(timestamp);
+                }
+            }
+        }
+    }
+
+    public List<GreenInterval> getGreenIntervals(Direction direction) {
+        if (direction == null) {
+            throw new IllegalArgumentException("Direction cannot be null");
+        }
+        return Collections.unmodifiableList(greenIntervals.getOrDefault(direction, Collections.emptyList()));
+    }
+
+    public Map<Direction, List<GreenInterval>> getAllGreenIntervals() {
+        Map<Direction, List<GreenInterval>> copy = new EnumMap<>(Direction.class);
+        for (Direction d : Direction.values()) {
+            copy.put(d, getGreenIntervals(d));
+        }
+        return Collections.unmodifiableMap(copy);
+    }
+
+    /**
+     * Closes all currently open GREEN intervals across all directions at the specified
+     * termination timestamp. Already-closed intervals are untouched.
+     * Repeated finalization is safe and idempotent.
+     * Does not simulate a physical signal transition; this is measurement-window finalization only.
+     */
+    public void closeActiveGreenIntervals(double terminationTimestamp) {
+        validateEventTime(terminationTimestamp);
+        for (List<GreenInterval> intervals : greenIntervals.values()) {
+            if (!intervals.isEmpty()) {
+                GreenInterval last = intervals.get(intervals.size() - 1);
+                if (last.isOpen()) {
+                    double closeTime = Math.max(last.getStartTime(), terminationTimestamp);
+                    last.close(closeTime);
+                }
+            }
+        }
+    }
+
+    public OptionalDouble getEmergencyGrantDelay(Direction direction, double arrivalTime) {
+        if (direction == null) {
+            throw new IllegalArgumentException("Direction cannot be null");
+        }
+        validateEventTime(arrivalTime);
+
+        List<GreenInterval> intervals = greenIntervals.getOrDefault(direction, Collections.emptyList());
+
+        // 1. If its direction is already GREEN at arrival, grant delay is zero.
+        for (GreenInterval interval : intervals) {
+            if (interval.isActiveAt(arrivalTime)) {
+                return OptionalDouble.of(0.0);
+            }
         }
 
-        return scheduler.hasPendingArrivalEvents();
+        // 2. Otherwise, use the first GREEN interval starting after arrival.
+        for (GreenInterval interval : intervals) {
+            if (interval.startsAfter(arrivalTime)) {
+                return OptionalDouble.of(interval.getStartTime() - arrivalTime);
+            }
+        }
+
+        // 3. If no qualifying GREEN occurs before termination, represent as unavailable/censored
+        return OptionalDouble.empty();
+    }
+
+    public int getPendingArrivalCount() {
+        if (eventScheduling == null) {
+            throw new IllegalStateException("EventScheduling is not configured in this context");
+        }
+        return eventScheduling.getPendingArrivalCount();
+    }
+
+    public int getPendingDepartureCount() {
+        if (eventScheduling == null) {
+            throw new IllegalStateException("EventScheduling is not configured in this context");
+        }
+        return eventScheduling.getPendingDepartureCount();
+    }
+
+    public List<com.traffic.simulation.events.VehicleDepartureEvent> getPendingDepartureEvents() {
+        if (eventScheduling instanceof com.traffic.simulation.scheduler.EventScheduler scheduler) {
+            return scheduler.getPendingDepartureEvents();
+        }
+        return Collections.emptyList();
+    }
+
+    public int getSuccessfulMovementCount() {
+        return successfulMovementCount;
+    }
+
+    public OptionalDouble getLastSuccessfulMovementTime() {
+        return Double.isNaN(lastSuccessfulMovementTime)
+                ? OptionalDouble.empty()
+                : OptionalDouble.of(lastSuccessfulMovementTime);
+    }
+
+    public boolean isPhaseBudgetExhausted() {
+        return phaseBudgetExhausted;
+    }
+
+    public void setPhaseBudgetExhausted(boolean phaseBudgetExhausted) {
+        this.phaseBudgetExhausted = phaseBudgetExhausted;
+    }
+
+    public SimulationTerminationStatus getTerminationStatus() {
+        return terminationStatus;
+    }
+
+    public void setTerminationStatus(SimulationTerminationStatus terminationStatus) {
+        this.terminationStatus = terminationStatus;
+    }
+
+    public void resetProgress() {
+        this.successfulMovementCount = 0;
+        this.lastSuccessfulMovementTime = Double.NaN;
+        this.phaseBudgetExhausted = false;
+        this.terminationStatus = null;
+        this.movementTimestamps.clear();
+        this.departureTimestamps.clear();
+        for (List<GreenInterval> list : greenIntervals.values()) {
+            list.clear();
+        }
+    }
+
+    public boolean hasPendingRecoveryEvents() {
+        if (eventScheduling == null) {
+            throw new IllegalStateException("EventScheduling is not configured in this context");
+        }
+        return eventScheduling.hasPendingRecoveryEvents();
+    }
+
+    public boolean hasPendingDepartureEvents() {
+        if (eventScheduling == null) {
+            throw new IllegalStateException("EventScheduling is not configured in this context");
+        }
+        return eventScheduling.hasPendingDepartureEvents();
+    }
+
+    public boolean hasPendingProgressEvents() {
+        if (eventScheduling == null) {
+            throw new IllegalStateException("EventScheduling is not configured in this context");
+        }
+        return eventScheduling.hasPendingProgressEvents();
+    }
+
+    public boolean areAllVehiclesBlocked() {
+        int vehicleCount = intersection.getVehicleCount();
+        if (vehicleCount == 0) {
+            return false;
+        }
+
+        for (Road road : intersection.getRoads()) {
+            boolean roadBlocked = road.isBlocked();
+            Direction dir = road.getDirection();
+            boolean signalFailed = dir != null && isSignalFailed(dir);
+
+            for (Lane lane : road.getLanes()) {
+                if (!lane.isEmpty()) {
+                    boolean laneBlocked = roadBlocked || lane.isBlocked() || signalFailed;
+                    if (!laneBlocked) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 }

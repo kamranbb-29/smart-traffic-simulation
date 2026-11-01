@@ -38,6 +38,11 @@ public class TrafficLightChangeEvent extends SimulationEvent {
     }
 
     @Override
+    public boolean canEnableProgress() {
+        return nextState == SignalState.GREEN;
+    }
+
+    @Override
     public void executeEvent(SimulationContext context) {
 
         if (context == null) {
@@ -57,6 +62,7 @@ public class TrafficLightChangeEvent extends SimulationEvent {
 
     try {
         signal.transitionTo(nextState);
+        context.recordSignalStateChange(direction, nextState, getEventTime());
     } catch (InvalidSignalTransitionException e) {
         throw new IllegalStateException(
             "Failed to change signal " + direction + " to " + nextState,

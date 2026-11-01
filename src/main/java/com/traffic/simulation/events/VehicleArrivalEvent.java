@@ -44,6 +44,11 @@ public class VehicleArrivalEvent extends SimulationEvent {
     }
 
     @Override
+    public boolean isArrivalEvent() {
+        return true;
+    }
+
+    @Override
     public void executeEvent(SimulationContext context) {
 
         if (context == null) {

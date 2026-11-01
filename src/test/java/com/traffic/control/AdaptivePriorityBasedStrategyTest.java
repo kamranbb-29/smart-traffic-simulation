@@ -1,10 +1,12 @@
 package com.traffic.control;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 public class AdaptivePriorityBasedStrategyTest {
@@ -102,6 +104,13 @@ public class AdaptivePriorityBasedStrategyTest {
 
         assertEquals(Direction.SOUTH, aps.chooseDirection(snapshot));
 
+    }
+
+    @Test
+    @DisplayName("Validation: null snapshot must throw IllegalArgumentException")
+    void testNullSnapshotThrowsIllegalArgumentException() {
+        AdaptivePriorityStrategy strategy = new AdaptivePriorityStrategy();
+        assertThrows(IllegalArgumentException.class, () -> strategy.chooseDirection(null));
     }
 
 }

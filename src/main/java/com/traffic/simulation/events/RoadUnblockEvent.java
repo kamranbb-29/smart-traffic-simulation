@@ -18,6 +18,11 @@ public class RoadUnblockEvent extends SimulationEvent{
     }
 
     @Override
+    public boolean isRecoveryEvent() {
+        return true;
+    }
+
+    @Override
     public void executeEvent(SimulationContext context) {
         if(context == null){
             throw new IllegalArgumentException("SimulationContext cannot be null");

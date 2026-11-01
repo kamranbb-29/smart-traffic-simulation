@@ -4,10 +4,18 @@ import java.util.Map;
 
 public class AdaptivePriorityStrategy implements SignalControlStrategy {
 
+    @Override
     public Direction chooseDirection(TrafficSnapshot snapshot) {
+        if (snapshot == null) {
+            throw new IllegalArgumentException("Traffic snapshot cannot be null");
+        }
+        if (snapshot.getTrafficData() == null || snapshot.getTrafficData().isEmpty()) {
+            return null;
+        }
+
         Direction direc = null;
         int count = 0;
-        int waitingTime = 0;
+        double waitingTime = 0.0;
 
         for (Map.Entry<Direction, DirectionTraffic> entry : snapshot.getTrafficData().entrySet()) {
 
@@ -19,17 +27,17 @@ public class AdaptivePriorityStrategy implements SignalControlStrategy {
                 if (traffic.getEmergencyVehicleCount() > count) {
                     count = traffic.getEmergencyVehicleCount();
                     direc = direction;
-                    waitingTime = (int) traffic.getWaitingTime();
+                    waitingTime = traffic.getWaitingTime();
 
                 } else if (traffic.getEmergencyVehicleCount() == count) {
                     if (traffic.getWaitingTime() > waitingTime) {
                         direc = direction;
-                        waitingTime = (int) traffic.getWaitingTime();
+                        waitingTime = traffic.getWaitingTime();
 
                     } else if (traffic.getWaitingTime() == waitingTime) {
                         if (direction.ordinal() < direc.ordinal()) {
                             direc = direction;
-                            waitingTime = (int) traffic.getWaitingTime();
+                            waitingTime = traffic.getWaitingTime();
 
                         }
                     }
@@ -43,17 +51,17 @@ public class AdaptivePriorityStrategy implements SignalControlStrategy {
             return direc;
         }
         Direction tempDirec = null;
-        int tempWaitingTime = -1;
+        double tempWaitingTime = -1.0;
         for (Map.Entry<Direction, DirectionTraffic> entry : snapshot.getTrafficData().entrySet()) {
 
             Direction direction = entry.getKey();
             DirectionTraffic traffic = entry.getValue();
 
-            if (traffic.getWaitingTime() >= 120) {
-                if (traffic.getWaitingTime() > tempWaitingTime) {
+            if (traffic.getMaxWaitingTime() >= 120.0) {
+                if (traffic.getMaxWaitingTime() > tempWaitingTime) {
                     tempDirec = direction;
-                    tempWaitingTime = (int) traffic.getWaitingTime();
-                } else if (traffic.getWaitingTime() == tempWaitingTime) {
+                    tempWaitingTime = traffic.getMaxWaitingTime();
+                } else if (traffic.getMaxWaitingTime() == tempWaitingTime) {
                     if (direction.ordinal() < tempDirec.ordinal()) {
                         tempDirec = direction;
 

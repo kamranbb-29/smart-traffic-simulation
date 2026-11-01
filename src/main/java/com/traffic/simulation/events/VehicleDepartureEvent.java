@@ -34,8 +34,22 @@ public class VehicleDepartureEvent extends SimulationEvent {
         return vehicle.getId();
     }
 
+    public Vehicle getVehicle() {
+        return vehicle;
+    }
+
     public Direction getExitDirection() {
         return exitDirection;
+    }
+
+    @Override
+    public boolean isDepartureEvent() {
+        return true;
+    }
+
+    @Override
+    public boolean canEnableProgress() {
+        return true;
     }
 
     @Override
@@ -47,7 +61,7 @@ public class VehicleDepartureEvent extends SimulationEvent {
             );
         }
 
-        context.recordCompletedVehicle(vehicle);
+        context.recordCompletedVehicle(vehicle, getEventTime());
 
         System.out.println(
             "Vehicle " + vehicle.getId()
