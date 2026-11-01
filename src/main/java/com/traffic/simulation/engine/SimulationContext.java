@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
+
 public class SimulationContext {
     private final SimulationClock clock;
     private final Intersection intersection;
@@ -37,24 +38,22 @@ public class SimulationContext {
         this(clock, intersection, eventScheduling, DEFAULT_VEHICLE_HEADWAY);
     }
 
-    public SimulationContext(SimulationClock clock, Intersection intersection, EventScheduling eventScheduling, double vehicleHeadway) {
+    public SimulationContext(SimulationClock clock, Intersection intersection, EventScheduling eventScheduling,
+            double vehicleHeadway) {
 
         if (clock == null) {
             throw new IllegalArgumentException(
-                "SimulationClock cannot be null"
-            );
+                    "SimulationClock cannot be null");
         }
 
         if (intersection == null) {
             throw new IllegalArgumentException(
-                "Intersection cannot be null"
-            );
+                    "Intersection cannot be null");
         }
 
         if (!Double.isFinite(vehicleHeadway) || vehicleHeadway <= 0) {
             throw new IllegalArgumentException(
-                "Vehicle headway must be finite and greater than zero"
-            );
+                    "Vehicle headway must be finite and greater than zero");
         }
 
         this.clock = clock;
@@ -77,14 +76,14 @@ public class SimulationContext {
         return intersection;
     }
 
-    public Lane getLane(String laneId){
-        if(laneId == null || laneId.trim().isEmpty()){
+    public Lane getLane(String laneId) {
+        if (laneId == null || laneId.trim().isEmpty()) {
             throw new IllegalArgumentException("Lane ID cannot be null or empty");
         }
-        if(intersection !=null){
-            for(Road road : intersection.getRoads()){
-                for(Lane lane : road.getLanes()){
-                    if(lane.getId().equals(laneId)){
+        if (intersection != null) {
+            for (Road road : intersection.getRoads()) {
+                for (Lane lane : road.getLanes()) {
+                    if (lane.getId().equals(laneId)) {
                         return lane;
                     }
                 }
@@ -97,14 +96,12 @@ public class SimulationContext {
 
         if (roadId == null || roadId.isBlank()) {
             throw new IllegalArgumentException(
-                "Road ID cannot be null or empty"
-            );
+                    "Road ID cannot be null or empty");
         }
 
         if (laneId == null || laneId.isBlank()) {
             throw new IllegalArgumentException(
-                "Lane ID cannot be null or empty"
-            );
+                    "Lane ID cannot be null or empty");
         }
 
         Road road = getRoad(roadId);
@@ -116,27 +113,26 @@ public class SimulationContext {
         }
 
         throw new IllegalArgumentException(
-            "Lane " + laneId + " does not exist on road " + roadId
-        );
+                "Lane " + laneId + " does not exist on road " + roadId);
     }
 
     public double getVehicleHeadway() {
         return vehicleHeadway;
     }
 
-    public Road getRoad(String roadId){
-        if(roadId == null || roadId.trim().isEmpty()){
+    public Road getRoad(String roadId) {
+        if (roadId == null || roadId.trim().isEmpty()) {
             throw new IllegalArgumentException("Road id cannot be empty");
         }
-        
-        if(intersection != null){
-            for(Road road : intersection.getRoads()){
-                if(road.getId().equals(roadId)){
+
+        if (intersection != null) {
+            for (Road road : intersection.getRoads()) {
+                if (road.getId().equals(roadId)) {
                     return road;
                 }
             }
         }
-        
+
         throw new IllegalArgumentException("Road with ID " + roadId + " does not exist");
     }
 
@@ -153,8 +149,7 @@ public class SimulationContext {
 
         if (trafficSignals.containsKey(direction)) {
             throw new IllegalArgumentException(
-                "Traffic signal already exists for " + direction
-            );
+                    "Traffic signal already exists for " + direction);
         }
 
         trafficSignals.put(direction, signal);
@@ -169,8 +164,7 @@ public class SimulationContext {
 
         if (signal == null) {
             throw new IllegalArgumentException(
-                "No traffic signal found for " + direction
-            );
+                    "No traffic signal found for " + direction);
         }
 
         return signal;
@@ -194,8 +188,7 @@ public class SimulationContext {
     public void recordCompletedVehicle(Vehicle vehicle) {
         if (vehicle == null) {
             throw new IllegalArgumentException(
-                "Vehicle cannot be null"
-            );
+                    "Vehicle cannot be null");
         }
 
         if (completedVehicleSet.add(vehicle)) {
@@ -214,14 +207,12 @@ public class SimulationContext {
     public void scheduleEvent(SimulationEvent event) {
         if (event == null) {
             throw new IllegalArgumentException(
-                "SimulationEvent cannot be null"
-            );
+                    "SimulationEvent cannot be null");
         }
 
         if (eventScheduling == null) {
             throw new IllegalStateException(
-                "Event scheduling is not available in this context"
-            );
+                    "Event scheduling is not available in this context");
         }
 
         eventScheduling.scheduleEvent(event);
@@ -247,8 +238,7 @@ public class SimulationContext {
 
         if (direction == null) {
             throw new IllegalStateException(
-                "Road " + roadId + " has no direction assigned"
-            );
+                    "Road " + roadId + " has no direction assigned");
         }
 
         TrafficSignal signal = getTrafficSignal(direction);
@@ -264,10 +254,9 @@ public class SimulationContext {
         // An incompatible vehicle indicates an assignment/configuration bug.
         if (!lane.isMovementPermitted(movement)) {
             throw new IllegalStateException(
-                "Vehicle " + vehicle.getId()
-                + " is in incompatible lane " + laneId
-                + " on road " + roadId
-            );
+                    "Vehicle " + vehicle.getId()
+                            + " is in incompatible lane " + laneId
+                            + " on road " + roadId);
         }
 
         // Only one pending movement event per lane.
@@ -277,15 +266,13 @@ public class SimulationContext {
 
         try {
             scheduleEvent(
-                new VehicleMovementEvent(
-                    roadId,
-                    laneId,
-                    direction,
-                    movement,
-                    eventTime,
-                    eventPriority
-                )
-            );
+                    new VehicleMovementEvent(
+                            roadId,
+                            laneId,
+                            direction,
+                            movement,
+                            eventTime,
+                            eventPriority));
         } catch (RuntimeException exception) {
             scheduledMovementLanes.remove(lane);
             throw exception;
@@ -293,7 +280,6 @@ public class SimulationContext {
 
         return true;
     }
-
 
     // Schedules eligible lanes belonging to one approach direction.
     public void scheduleMovementsForDirection(
@@ -303,8 +289,7 @@ public class SimulationContext {
 
         if (direction == null) {
             throw new IllegalArgumentException(
-                "Direction cannot be null"
-            );
+                    "Direction cannot be null");
         }
 
         validateEventTime(eventTime);
@@ -316,15 +301,13 @@ public class SimulationContext {
 
             for (Lane lane : road.getLanes()) {
                 scheduleMovementForLane(
-                    road.getId(),
-                    lane.getId(),
-                    eventTime,
-                    eventPriority
-                );
+                        road.getId(),
+                        lane.getId(),
+                        eventTime,
+                        eventPriority);
             }
         }
     }
-
 
     // Schedules eligible lanes belonging to one road.
     public void scheduleMovementsForRoad(
@@ -338,27 +321,23 @@ public class SimulationContext {
 
         for (Lane lane : road.getLanes()) {
             scheduleMovementForLane(
-                roadId,
-                lane.getId(),
-                eventTime,
-                eventPriority
-            );
+                    roadId,
+                    lane.getId(),
+                    eventTime,
+                    eventPriority);
         }
     }
-
 
     // Releases the pending marker when a movement event starts.
     public void markMovementEventStarted(Lane lane) {
 
         if (lane == null) {
             throw new IllegalArgumentException(
-                "Lane cannot be null"
-            );
+                    "Lane cannot be null");
         }
 
         scheduledMovementLanes.remove(lane);
     }
-
 
     // Schedules the next vehicle after a successful movement.
     public boolean scheduleNextVehicle(
@@ -369,44 +348,37 @@ public class SimulationContext {
 
         validateEventTime(successfulMovementTime);
 
-        double nextMovementTime =
-            successfulMovementTime + vehicleHeadway;
+        double nextMovementTime = successfulMovementTime + vehicleHeadway;
 
         if (!Double.isFinite(nextMovementTime)) {
             throw new IllegalArgumentException(
-                "Next movement time exceeds the supported range"
-            );
+                    "Next movement time exceeds the supported range");
         }
 
         return scheduleMovementForLane(
-            roadId,
-            laneId,
-            nextMovementTime,
-            eventPriority
-        );
+                roadId,
+                laneId,
+                nextMovementTime,
+                eventPriority);
     }
-
 
     // Clears pending movement markers during a simulation reset.
     public void clearScheduledMovementEvents() {
         scheduledMovementLanes.clear();
     }
 
-
     private void validateEventTime(double eventTime) {
 
         if (!Double.isFinite(eventTime) || eventTime < 0) {
             throw new IllegalArgumentException(
-                "Event time must be finite and non-negative"
-            );
+                    "Event time must be finite and non-negative");
         }
     }
 
     public Road getRoadForLane(Lane targetLane) {
         if (targetLane == null) {
             throw new IllegalArgumentException(
-                "Lane cannot be null"
-            );
+                    "Lane cannot be null");
         }
 
         for (Road road : intersection.getRoads()) {
@@ -418,7 +390,15 @@ public class SimulationContext {
         }
 
         throw new IllegalArgumentException(
-            "Lane does not belong to this intersection"
-        );
+                "Lane does not belong to this intersection");
+    }
+
+    public boolean hasPendingArrivalEvents() {
+        if (!(eventScheduling instanceof com.traffic.simulation.scheduler.EventScheduler scheduler)) {
+            throw new IllegalStateException(
+                    "Pending arrival inspection is not supported by this scheduler");
+        }
+
+        return scheduler.hasPendingArrivalEvents();
     }
 }

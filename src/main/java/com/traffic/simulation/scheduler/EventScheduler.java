@@ -1,32 +1,34 @@
 package com.traffic.simulation.scheduler;
+
 import com.traffic.simulation.events.SimulationEvent;
+import com.traffic.simulation.events.VehicleArrivalEvent;
 
 import java.util.PriorityQueue;
 
-public class EventScheduler implements EventScheduling{
+public class EventScheduler implements EventScheduling {
     private final PriorityQueue<ScheduledEvent> eventQueue;
     private long nextSequenceNumber = 0;
 
-    public EventScheduler(){
+    public EventScheduler() {
         this.eventQueue = new PriorityQueue<>();
     }
 
-    public void scheduleEvent(SimulationEvent event){
+    public void scheduleEvent(SimulationEvent event) {
         ScheduledEvent scheduled = new ScheduledEvent(event, nextSequenceNumber++);
         eventQueue.add(scheduled);
     }
 
-    public SimulationEvent getNextEvent(){
+    public SimulationEvent getNextEvent() {
         ScheduledEvent scheduled = eventQueue.poll();
-        
-        if(scheduled == null){
+
+        if (scheduled == null) {
             return null;
         }
 
         return scheduled.getEvent();
     }
 
-    public boolean hasEvents(){
+    public boolean hasEvents() {
         return !eventQueue.isEmpty();
     }
 
@@ -36,5 +38,10 @@ public class EventScheduler implements EventScheduling{
 
     public void clearEvents() {
         eventQueue.clear();
+    }
+
+    public boolean hasPendingArrivalEvents() {
+        return eventQueue.stream()
+                .anyMatch(scheduled -> scheduled.getEvent() instanceof VehicleArrivalEvent);
     }
 }
